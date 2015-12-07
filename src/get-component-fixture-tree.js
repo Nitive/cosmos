@@ -28,10 +28,10 @@ function getFixturesPatternDefault(componentName) {
 }
 
 
-module.exports = function(opts) {
-  var options = opts || {};
-  options.componentsPattern = options.componentsPattern || /^\.\/(.+)\.jsx?$/;
-  options.getFixturesPattern = options.getFixturesPattern || getFixturesPatternDefault;
+module.exports = function() {
+  var options = {};
+  options.componentsPattern = window.COSMOS_COMPONENTS_PATTERN || /^\.\/(.+)\.jsx?$/;
+  options.getFixturesPattern = window.COSMOS_GET_FIXTURES_PATTERN || getFixturesPatternDefault;
 
   var requireComponent = require.context('COSMOS_COMPONENTS', true),
       isComponent = options.componentsPattern,
