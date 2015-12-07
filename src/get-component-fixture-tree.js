@@ -22,9 +22,19 @@
   *   }
   * }
   */
-module.exports = function() {
+
+function getFixturesPatternDefault(componentName) {
+  return new RegExp('./' + componentName + '/([^/]+).js$')
+}
+
+
+module.exports = function(opts) {
+  var options = opts || {};
+  options.componentsPattern = options.componentsPattern || /^\.\/(.+)\.jsx?$/;
+  options.getFixturesPattern = options.getFixturesPattern || getFixturesPatternDefault;
+
   var requireComponent = require.context('COSMOS_COMPONENTS', true),
-      isComponent = /^\.\/(.+)\.jsx?$/,
+      isComponent = options.componentsPattern,
       components = {};
 
   requireComponent.keys().forEach(function(componentPath) {
@@ -37,7 +47,7 @@ module.exports = function() {
     var componentName = match[1];
     components[componentName] = {
       class: requireComponent(componentPath),
-      fixtures: getFixturesForComponent(componentName)
+      fixtures: getFixturesForComponent(componentName, options)
     };
 
     // Allow users to browse components before creating fixtures
@@ -49,9 +59,9 @@ module.exports = function() {
   return components;
 };
 
-var getFixturesForComponent = function(componentName) {
+var getFixturesForComponent = function(componentName, options) {
   var requireFixture = require.context('COSMOS_FIXTURES', true),
-      isFixtureOfComponent = new RegExp('./' + componentName + '/([^/]+).js$'),
+      isFixtureOfComponent = options.getFixturesPattern(componentName),
       fixtures = {};
 
   requireFixture.keys().forEach(function(fixturePath) {
