@@ -23,21 +23,24 @@
   * }
   */
 
-function getFixturesPatternDefault(componentName) {
-  return new RegExp('./' + componentName + '/([^/]+).js$')
+_COSMOS_FILTER_FIXTURES = function(fixtureName) {
+  return fixtureName.includes('fixture')
+}
+_COSMOS_FILTER_COMPONENTS = function(componentName) {
+  return componentName.includes('index')
 }
 
-
 module.exports = function() {
-  var options = {};
-  options.componentsPattern = window.COSMOS_COMPONENTS_PATTERN || /^\.\/(.+)\.jsx?$/;
-  options.getFixturesPattern = window.COSMOS_GET_FIXTURES_PATTERN || getFixturesPatternDefault;
-
   var requireComponent = require.context('COSMOS_COMPONENTS', true),
-      isComponent = options.componentsPattern,
+      isComponent = /^\.\/(.+)\.jsx?$/,
       components = {};
 
   requireComponent.keys().forEach(function(componentPath) {
+    if (_COSMOS_FILTER_COMPONENTS) {
+      if (!_COSMOS_FILTER_COMPONENTS(componentPath)) {
+        return;
+      }
+    }
     var match = componentPath.match(isComponent);
     if (!match) {
       return;
@@ -47,7 +50,7 @@ module.exports = function() {
     var componentName = match[1];
     components[componentName] = {
       class: requireComponent(componentPath),
-      fixtures: getFixturesForComponent(componentName, options)
+      fixtures: getFixturesForComponent(componentName.slice(0, -6))
     };
 
     // Allow users to browse components before creating fixtures
@@ -59,15 +62,20 @@ module.exports = function() {
   return components;
 };
 
-var getFixturesForComponent = function(componentName, options) {
+var getFixturesForComponent = function(componentName) {
   var requireFixture = require.context('COSMOS_FIXTURES', true),
-      isFixtureOfComponent = options.getFixturesPattern(componentName),
+      isFixtureOfComponent = new RegExp('./' + componentName + '/([^/]+).js$'),
       fixtures = {};
 
   requireFixture.keys().forEach(function(fixturePath) {
+    if (_COSMOS_FILTER_FIXTURES) {
+      if (!_COSMOS_FILTER_FIXTURES(fixturePath)) {
+        return;
+      }
+    }
     var match = fixturePath.match(isFixtureOfComponent);
     if (match) {
-      fixtures[match[1]] = requireFixture(fixturePath);
+      fixtures[match[1].slice(0, -8)] = requireFixture(fixturePath);
     }
   });
 
